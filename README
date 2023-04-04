@@ -1,6 +1,6 @@
 # Calendar Proxy
 
-General idea: A serverless proxy that changes calendar events in a pre-defined way
+Proxy that changes calendar events in a pre-defined way
 
 It will need:
   - a nice frontend to make it simple for the user to define how they want their events altered

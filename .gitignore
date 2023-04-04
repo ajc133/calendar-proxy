@@ -1,4 +1,4 @@
-app.js
+*.js
 # Logs
 logs
 *.log
