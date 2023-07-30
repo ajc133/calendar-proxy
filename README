@@ -1,9 +1,0 @@
-# Calendar Proxy
-
-Proxy that changes calendar events in a pre-defined way
-
-It will need:
-  - a nice frontend to make it simple for the user to define how they want their events altered
-    - No fancy shit. Just html, css, and js
-  - a database to link unique calendar IDs,  calendar's modification, and its weblink
-    - Maybe also limit the amount of requests per hour eventually?
