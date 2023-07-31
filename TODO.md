@@ -1,0 +1,3 @@
+- Return calendar as http response
+- Configurable 'replacement_summary'
+- Define Config struct and read in all fields
