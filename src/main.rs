@@ -1,24 +1,28 @@
 use axum::{routing::get, Router};
 use icalendar;
 use reqwest;
+use serde::Deserialize;
 use std::fs;
-use toml::Table;
+use toml;
 
-fn read_config(config_file: &str) -> String {
-    let toml_str = fs::read_to_string(config_file)
-        .unwrap_or_else(|_| panic!("Failed to read '{}'", &config_file));
-    let calendar_toml = toml_str.parse::<Table>().unwrap();
-    let Some(url) = calendar_toml["url"].as_str() else {
-        panic!("Can't parse 'url' key in config.toml");
-    };
-    url.to_string()
+#[derive(Deserialize)]
+struct Config {
+    url: String,
+    replacement: String,
+}
+
+fn read_config(config_path: &str) -> Config {
+    let toml_str = fs::read_to_string(config_path)
+        .unwrap_or_else(|error| panic!("Failed to read '{}': {}", &config_path, error));
+    toml::from_str(&toml_str)
+        .unwrap_or_else(|err| panic!("Failed to parse config at {}: {}", config_path, err))
 }
 
 #[tokio::main]
 async fn main() {
-    let url = read_config("config.toml");
+    let config = read_config("config.toml");
 
-    let response_result = reqwest::get(url).await.unwrap().text().await;
+    let response_result = reqwest::get(config.url).await.unwrap().text().await;
     let response_str = match response_result {
         Ok(response) => response,
         Err(err) => {
@@ -31,7 +35,7 @@ async fn main() {
     for component in &mut calendar.components {
         for property in &mut component.properties {
             if property.name.to_string().eq("SUMMARY") {
-                property.val = "on call".into();
+                property.val = config.replacement.clone().into();
             }
         }
     }

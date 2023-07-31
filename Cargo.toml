@@ -12,3 +12,4 @@ futures = "0.3" # for our async / await blocks
 tokio = { version = "1.12.0", features = ["full"] } # for our async runtime
 icalendar = "0.15.6"
 axum = "0.6.19"
+serde = { version = "1.0.179", features = ["serde_derive"] }
