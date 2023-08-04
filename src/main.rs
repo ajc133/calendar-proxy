@@ -1,49 +1,60 @@
-use axum::{routing::get, Router};
-use icalendar;
+use axum::{
+    extract::Query,
+    // http::{header, StatusCode},
+    // response::{IntoResponse, Response},
+    routing::get,
+    Router,
+};
+use icalendar::{self, parser::Calendar};
 use reqwest;
 use serde::Deserialize;
-use std::fs;
-use toml;
+use std::net::SocketAddr;
 
 #[derive(Deserialize)]
-struct Config {
+struct CalendarParams {
     url: String,
-    replacement: String,
+    replacement_summary: String,
 }
 
-fn read_config(config_path: &str) -> Config {
-    let toml_str = fs::read_to_string(config_path)
-        .unwrap_or_else(|error| panic!("Failed to read '{}': {}", &config_path, error));
-    toml::from_str(&toml_str)
-        .unwrap_or_else(|err| panic!("Failed to parse config at {}: {}", config_path, err))
+async fn handle_calendar(calendar_params: Query<CalendarParams>) -> String {
+    let calendar_params: CalendarParams = calendar_params.0;
+    let mut calendar = fetch_calendar(calendar_params.url).await;
+
+    // FIXME: More rusty plz
+    let _ = replace_summary(&mut calendar, calendar_params.replacement_summary);
+    calendar.to_string()
 }
 
-#[tokio::main]
-async fn main() {
-    let config = read_config("config.toml");
-
-    let response_result = reqwest::get(config.url).await.unwrap().text().await;
+async fn fetch_calendar(url: String) -> Calendar<'static> {
+    let response_result = reqwest::get(&url).await.unwrap().text().await;
     let response_str = match response_result {
         Ok(response) => response,
         Err(err) => {
             panic!("Error fetching the calendar: {}", err);
         }
     };
+    println!("{}", &url);
+    icalendar::parser::read_calendar(&response_str).unwrap() // FIXME: response_str is borrowed here
+}
 
-    let mut calendar = icalendar::parser::read_calendar(&response_str).unwrap();
-
+fn replace_summary(calendar: &mut Calendar, replacement: String) {
     for component in &mut calendar.components {
         for property in &mut component.properties {
             if property.name.to_string().eq("SUMMARY") {
-                property.val = config.replacement.clone().into();
+                property.val = replacement.clone().into();
             }
         }
     }
+}
 
-    let s = calendar.clone().to_string();
-    let app = Router::new().route("/", get(|| async { s }));
-    // run it with hyper on localhost:3000
-    axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
+#[tokio::main]
+async fn main() {
+    tracing_subscriber::fmt::init();
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let app = Router::new().route("/calendar", get(handle_calendar));
+
+    tracing::info!("listening on {}", addr);
+    axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
         .unwrap();
