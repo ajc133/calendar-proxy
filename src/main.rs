@@ -31,13 +31,13 @@ async fn handle_calendar(calendar_params: Query<CalendarParams>) -> impl IntoRes
 
 async fn fetch_calendar_text(url: String) -> String {
     let response_result = reqwest::get(&url).await.unwrap().text().await;
+    println!("{}", &url);
     let response_str = match response_result {
         Ok(response) => response,
         Err(err) => {
             panic!("Error fetching the calendar: {}", err);
         }
     };
-    println!("{}", &url);
     response_str
 }
 
@@ -54,7 +54,7 @@ fn replace_summary(calendar: &mut Calendar, replacement: String) {
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     let app = Router::new().route("/calendar", get(handle_calendar));
 
     tracing::info!("listening on {}", addr);
