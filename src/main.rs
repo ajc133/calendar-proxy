@@ -1,13 +1,11 @@
 use axum::{
     extract::Query,
-    http::header::{self, HeaderMap, HeaderName},
+    http::header::{self, HeaderMap},
     response::IntoResponse,
-    // response::{IntoResponse, Response},
     routing::get,
     Router,
 };
 use icalendar::{self, parser::Calendar};
-use reqwest;
 use serde::Deserialize;
 use std::net::SocketAddr;
 
@@ -32,13 +30,12 @@ async fn handle_calendar(calendar_params: Query<CalendarParams>) -> impl IntoRes
 async fn fetch_calendar_text(url: String) -> String {
     let response_result = reqwest::get(&url).await.unwrap().text().await;
     println!("{}", &url);
-    let response_str = match response_result {
+    match response_result {
         Ok(response) => response,
         Err(err) => {
             panic!("Error fetching the calendar: {}", err);
         }
-    };
-    response_str
+    }
 }
 
 fn replace_summary(calendar: &mut Calendar, replacement: String) {
