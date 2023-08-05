@@ -1,6 +1,7 @@
 use axum::{
     extract::Query,
-    // http::{header, StatusCode},
+    http::header::{self, HeaderMap, HeaderName},
+    response::IntoResponse,
     // response::{IntoResponse, Response},
     routing::get,
     Router,
@@ -16,14 +17,16 @@ struct CalendarParams {
     replacement_summary: String,
 }
 
-async fn handle_calendar(calendar_params: Query<CalendarParams>) -> String {
+async fn handle_calendar(calendar_params: Query<CalendarParams>) -> impl IntoResponse {
     let calendar_params: CalendarParams = calendar_params.0;
     let calendar_str = fetch_calendar_text(calendar_params.url).await;
     let mut calendar = icalendar::parser::read_calendar(&calendar_str).unwrap();
 
-    // FIXME: More rusty plz
-    let _ = replace_summary(&mut calendar, calendar_params.replacement_summary);
-    calendar.to_string()
+    replace_summary(&mut calendar, calendar_params.replacement_summary);
+
+    let mut headers = HeaderMap::new();
+    headers.insert(header::CONTENT_TYPE, "text/calendar".parse().unwrap());
+    (headers, calendar.to_string())
 }
 
 async fn fetch_calendar_text(url: String) -> String {
