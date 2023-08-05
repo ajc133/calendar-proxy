@@ -1,2 +1,3 @@
-- Set mimetype: text/calendar
 - "Anonymize": Remove event fields that aren't necessary, like location
+- remove tokio
+- figure out how to make into a static binary? or just docker it :)
