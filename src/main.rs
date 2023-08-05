@@ -18,14 +18,15 @@ struct CalendarParams {
 
 async fn handle_calendar(calendar_params: Query<CalendarParams>) -> String {
     let calendar_params: CalendarParams = calendar_params.0;
-    let mut calendar = fetch_calendar(calendar_params.url).await;
+    let calendar_str = fetch_calendar_text(calendar_params.url).await;
+    let mut calendar = icalendar::parser::read_calendar(&calendar_str).unwrap();
 
     // FIXME: More rusty plz
     let _ = replace_summary(&mut calendar, calendar_params.replacement_summary);
     calendar.to_string()
 }
 
-async fn fetch_calendar(url: String) -> Calendar<'static> {
+async fn fetch_calendar_text(url: String) -> String {
     let response_result = reqwest::get(&url).await.unwrap().text().await;
     let response_str = match response_result {
         Ok(response) => response,
@@ -34,7 +35,7 @@ async fn fetch_calendar(url: String) -> Calendar<'static> {
         }
     };
     println!("{}", &url);
-    icalendar::parser::read_calendar(&response_str).unwrap() // FIXME: response_str is borrowed here
+    response_str
 }
 
 fn replace_summary(calendar: &mut Calendar, replacement: String) {

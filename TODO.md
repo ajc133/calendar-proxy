@@ -1,3 +1,2 @@
-- Figure out this stupid static lifetime issue for fetching the calendar
-- Return calendar as http response
 - Set mimetype: text/calendar
+- "Anonymize": Remove event fields that aren't necessary, like location
