@@ -1,0 +1,2 @@
+- Set mimetype: text/calendar
+- "Anonymize": Remove event fields that aren't necessary, like location
