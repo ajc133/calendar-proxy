@@ -110,3 +110,4 @@ dist
 /target
 
 config.toml
+examples/

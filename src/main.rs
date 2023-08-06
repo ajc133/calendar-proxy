@@ -5,7 +5,7 @@ use axum::{
     routing::get,
     Router,
 };
-use icalendar::{self, parser::Calendar};
+use icalendar::{self, parser::read_calendar, parser::unfold, parser::Calendar};
 use serde::Deserialize;
 use std::net::SocketAddr;
 
@@ -15,21 +15,28 @@ struct CalendarParams {
     replacement_summary: String,
 }
 
-async fn handle_calendar(calendar_params: Query<CalendarParams>) -> impl IntoResponse {
-    let calendar_params: CalendarParams = calendar_params.0;
+async fn handle_calendar(Query(calendar_params): Query<CalendarParams>) -> impl IntoResponse {
     let calendar_str = fetch_calendar_text(calendar_params.url).await;
-    let mut calendar = icalendar::parser::read_calendar(&calendar_str).unwrap();
+    let unfolded = unfold(&calendar_str);
+
+    // FIXME: Dont' panic, return 500 or something
+    let mut calendar = read_calendar(&unfolded).unwrap_or_else(|err| {
+        panic!("Error parsing calendar: {}", err);
+    });
 
     replace_summary(&mut calendar, calendar_params.replacement_summary);
 
     let mut headers = HeaderMap::new();
-    headers.insert(header::CONTENT_TYPE, "text/calendar".parse().unwrap());
+    headers.insert(
+        header::CONTENT_TYPE,
+        "text/calendar; charset=utf-8".parse().unwrap(),
+    );
     (headers, calendar.to_string())
 }
 
 async fn fetch_calendar_text(url: String) -> String {
     let response_result = reqwest::get(&url).await.unwrap().text().await;
-    println!("{}", &url);
+    tracing::info!("Parsed url:{}", &url);
     match response_result {
         Ok(response) => response,
         Err(err) => {
