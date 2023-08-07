@@ -18,10 +18,9 @@ struct CalendarParams {
 
 async fn handle_calendar(Query(calendar_params): Query<CalendarParams>) -> impl IntoResponse {
     let calendar_str = fetch_calendar_text(&calendar_params.url).await;
-    // let unfolded = unfold(&calendar_str);
+    let unfolded = unfold(&calendar_str);
 
-    // let mut calendar = match read_calendar(&unfolded) {
-    let mut calendar = match read_calendar(&calendar_str) {
+    let mut calendar = match read_calendar(&unfolded) {
         Ok(calendar) => calendar,
         Err(err) => {
             tracing::error!("Unable to parse {}: {}", &calendar_params.url, &err);
