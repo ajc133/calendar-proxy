@@ -1,11 +1,12 @@
 use axum::{
     extract::Query,
-    http::header::{self, HeaderMap},
-    response::IntoResponse,
+    http::header,
+    response::{IntoResponse, Response},
     routing::get,
     Router,
 };
 use icalendar::{self, parser::read_calendar, parser::unfold, parser::Calendar};
+use reqwest::StatusCode;
 use serde::Deserialize;
 use std::net::SocketAddr;
 
@@ -16,27 +17,38 @@ struct CalendarParams {
 }
 
 async fn handle_calendar(Query(calendar_params): Query<CalendarParams>) -> impl IntoResponse {
-    let calendar_str = fetch_calendar_text(calendar_params.url).await;
-    let unfolded = unfold(&calendar_str);
+    let calendar_str = fetch_calendar_text(&calendar_params.url).await;
+    // let unfolded = unfold(&calendar_str);
 
-    // FIXME: Dont' panic, return 500 or something
-    let mut calendar = read_calendar(&unfolded).unwrap_or_else(|err| {
-        panic!("Error parsing calendar: {}", err);
-    });
+    // let mut calendar = match read_calendar(&unfolded) {
+    let mut calendar = match read_calendar(&calendar_str) {
+        Ok(calendar) => calendar,
+        Err(err) => {
+            tracing::error!("Unable to parse {}: {}", &calendar_params.url, &err);
+            return Response::builder()
+                .status(StatusCode::UNPROCESSABLE_ENTITY)
+                .body(format!(
+                    "Error parsing calendar at given url: {}",
+                    &calendar_params.url
+                ))
+                .unwrap();
+        }
+    };
 
     replace_summary(&mut calendar, calendar_params.replacement_summary);
 
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        header::CONTENT_TYPE,
-        "text/calendar; charset=utf-8".parse().unwrap(),
-    );
-    (headers, calendar.to_string())
+    Response::builder()
+        .header(
+            header::CONTENT_TYPE,
+            "text/calendar; charset=utf-8".parse::<String>().unwrap(),
+        )
+        .body(calendar.to_string())
+        .unwrap()
 }
 
-async fn fetch_calendar_text(url: String) -> String {
-    let response_result = reqwest::get(&url).await.unwrap().text().await;
-    tracing::info!("Parsed url:{}", &url);
+async fn fetch_calendar_text(url: &String) -> String {
+    let response_result = reqwest::get(url).await.unwrap().text().await;
+    tracing::info!("Fetching {}", &url);
     match response_result {
         Ok(response) => response,
         Err(err) => {

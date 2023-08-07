@@ -1,6 +1,8 @@
+## Code Quality
 - "Anonymize": Remove event fields that aren't necessary, like location
-- remove tokio
-- figure out how to make into a static binary? or just docker it :)
+
+## Devops
+- Figure out how to make into a static binary? or just dockerize it :)
 
 
 ## Open-Source Contribution Opportunity
