@@ -7,6 +7,7 @@ use axum::{
 use icalendar::{self, parser::read_calendar, parser::unfold, parser::Calendar};
 use reqwest::StatusCode;
 use serde::Deserialize;
+use std::{env, path::Path};
 use uuid::Uuid;
 
 #[derive(Debug, Deserialize)]
@@ -31,7 +32,7 @@ impl CalendarParams {
 
 pub async fn handle_get_calendar(Query(id_req): Query<IDRequest>) -> impl IntoResponse {
     let id = id_req.id;
-    println!("GET: {}", id);
+    println!("GET /calendar?id={}", id);
     let calendar_params = read_record(id).await.unwrap();
     let calendar_str = fetch_calendar_text(&calendar_params.url).await;
     let unfolded = unfold(&calendar_str);
@@ -61,8 +62,6 @@ pub async fn handle_get_calendar(Query(id_req): Query<IDRequest>) -> impl IntoRe
 pub async fn handle_post_calendar(
     Form(calendar_params): Form<CalendarParams>,
 ) -> impl IntoResponse {
-    println!("POST: {:?}", calendar_params);
-
     let id = write_record(calendar_params).await.unwrap();
     Response::builder()
         .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
@@ -71,7 +70,10 @@ pub async fn handle_post_calendar(
 }
 
 async fn read_record(uuid: String) -> rusqlite::Result<CalendarParams, rusqlite::Error> {
-    let connection = rusqlite::Connection::open("db.sqlite").unwrap();
+    let db_dir = env::var("DATA_DIRECTORY").unwrap_or(".".to_string());
+    let db_dir = Path::new(&db_dir);
+    let db_path = db_dir.join("db.sqlite");
+    let connection = rusqlite::Connection::open(&db_path).unwrap();
 
     let mut statement = connection
         .prepare("SELECT url, replacement_summary FROM calendars WHERE id = (?1) LIMIT 1")?;
@@ -89,7 +91,11 @@ async fn read_record(uuid: String) -> rusqlite::Result<CalendarParams, rusqlite:
 async fn write_record(
     calendar_params: CalendarParams,
 ) -> rusqlite::Result<String, rusqlite::Error> {
-    let connection = rusqlite::Connection::open("db.sqlite").unwrap();
+    let db_dir = env::var("DATA_DIRECTORY").unwrap_or(".".to_string());
+    let db_dir = Path::new(&db_dir);
+    let db_path = db_dir.join("db.sqlite");
+    println!("Opening {:?}", &db_path);
+    let connection = rusqlite::Connection::open(&db_path).unwrap();
 
     let id = Uuid::new_v4()
         .hyphenated()

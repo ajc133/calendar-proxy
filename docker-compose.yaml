@@ -1,0 +1,17 @@
+---
+version: '3'
+volumes:
+  calendar_proxy_data:
+services:
+  server:
+    image: localhost/calendar-proxy
+    build:
+      tags:
+        - localhost/calendar-proxy:latest
+    volumes:
+      - calendar_proxy_data:/app/data
+    environment:
+      DATA_DIRECTORY: "/app/data"
+      PORT: 8080
+    ports:
+      - "8080:8080"
