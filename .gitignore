@@ -110,3 +110,4 @@ dist
 
 # User-defined
 input.txt
+db.sqlite

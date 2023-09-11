@@ -7,18 +7,19 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     tracing::info!("Init client");
+    let endpoint = "http://localhost:3000/calendar";
     let client = reqwest::Client::new();
 
     tracing::info!("Making request");
     let param_string = CalendarParams {
-        url: String::from("hello"),
-        replacement_summary: String::from("world"),
+        url: String::from("hola"),
+        replacement_summary: String::from("mundo"),
     }
     .to_url_form_encoded();
+    dbg!(&param_string);
 
-    println!("{}", param_string);
     let res: reqwest::Response = client
-        .post("http://localhost:3000/calendar")
+        .post(endpoint)
         .header(
             header::CONTENT_TYPE,
             "application/x-www-form-urlencoded; charset=utf-8",
@@ -26,6 +27,11 @@ async fn main() -> Result<()> {
         .body(param_string)
         .send()
         .await?;
+
+    let id: String = res.text().await.unwrap();
+    dbg!(&id);
+
+    let res = client.get(endpoint).query(&[("id", "test")]).send().await?;
     println!("{}", res.text().await.unwrap());
 
     Ok(())
