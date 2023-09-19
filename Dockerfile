@@ -24,6 +24,7 @@ cargo build --locked --release && cp ./target/release/$APP_NAME /bin/server
 
 FROM docker.io/debian:bookworm-slim AS final
 WORKDIR /app
+ENV DATA_DIRECTORY=/app/data
 
 RUN apt-get update && apt-get -y install pkg-config libssl-dev ca-certificates&& rm -rf /var/lib/apt/lists/*
 # Create a non-privileged user that the app will run under.

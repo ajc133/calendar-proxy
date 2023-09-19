@@ -4,10 +4,10 @@ volumes:
   calendar_proxy_data:
 services:
   server:
-    image: localhost/calendar-proxy
+    image: docker.io/ajcajc/calendar-proxy:latest
     build:
       tags:
-        - localhost/calendar-proxy:latest
+        - docker.io/ajcajc/calendar-proxy:latest
     volumes:
       - calendar_proxy_data:/app/data
     environment:
