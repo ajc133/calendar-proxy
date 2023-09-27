@@ -22,4 +22,4 @@ go.work
 
 # User-defined
 input.txt
-db.sqlite
+calendars.db
