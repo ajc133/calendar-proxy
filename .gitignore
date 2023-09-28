@@ -23,3 +23,4 @@ go.work
 # User-defined
 input.txt
 calendars.db
+main
