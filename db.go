@@ -2,13 +2,18 @@ package main
 
 import (
 	"database/sql"
+	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 )
 
 func InitDB() error {
 	db, err := sql.Open("sqlite3", "./calendars.db")
-	stmt := "CREATE TABLE IF NOT EXISTS calendars(id INTEGER PRIMARY KEY, url TEXT, replacementSummary TEXT);"
+	stmt := "CREATE TABLE IF NOT EXISTS calendars(" +
+		"id TEXT PRIMARY KEY," +
+		"url TEXT," +
+		"replacementSummary TEXT" +
+		");"
 	_, err = db.Exec(stmt)
 	if err != nil {
 		log.Fatal(err)
@@ -33,7 +38,7 @@ func ReadRecord(id string) (string, error) {
 	}
 	defer stmt.Close()
 	var url string
-	err = stmt.QueryRow("1").Scan(&url)
+	err = stmt.QueryRow(id).Scan(&url)
 	if err != nil {
 		return "", err
 	}
@@ -41,17 +46,20 @@ func ReadRecord(id string) (string, error) {
 
 }
 
-func WriteRecord(params CalendarParams) {
+func WriteRecord(params CalendarParams) (string, error) {
+	id := uuid.New().String()
 	db, err := sql.Open("sqlite3", "./calendars.db")
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	defer db.Close()
 
-	stmt := "INSERT INTO calendars(url, replacementSummary) VALUES(?, ?);"
-	result, err := db.Exec(stmt, params.Url, params.ReplacementSummary)
+	stmt := "INSERT INTO calendars(id, url, replacementSummary) VALUES(?, ?, ?);"
+	_, err = db.Exec(stmt, id, params.Url, params.ReplacementSummary)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
-	log.Println(result.LastInsertId())
+
+	return id, nil
+
 }

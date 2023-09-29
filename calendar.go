@@ -37,12 +37,10 @@ func FetchICS(url string) (string, error) {
 func TransformCalendar(body string, replacementSummary string) (string, error) {
 	cal, err := ics.ParseCalendar(strings.NewReader(body))
 	newCal := ics.NewCalendar()
-	log.Println("Attempting to transform")
 
 	if err != nil {
 		return "", err
 	}
-	log.Println(cal.Serialize())
 
 	for _, event := range cal.Events() {
 		newEvent := CopyBarebonesEvent(event)
