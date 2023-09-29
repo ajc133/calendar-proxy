@@ -37,14 +37,14 @@ func CreateCalendar(c *gin.Context) {
 	}
 
 	log.Printf("Going to replace '%s' SUMMARY with '%s',", json.Url, json.ReplacementSummary)
-	cal, err = TransformCalendar(cal, json.ReplacementSummary)
+	newCal, err := TransformCalendar(cal, json.ReplacementSummary)
 	if err != nil {
 		// TODO: consider masking this error
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	id, err := WriteRecord(json)
+	id, err := WriteRecord(json, newCal)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
