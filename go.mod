@@ -2,8 +2,6 @@ module github.com/ajc133/calendarProxy
 
 go 1.21.1
 
-replace github.com/ajc133/calendarProxy => /home/ajc/workspace/src/github.com/ajc133/calendarProxy
-
 require (
 	github.com/arran4/golang-ical v0.1.0
 	github.com/gin-gonic/gin v1.9.1
