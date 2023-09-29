@@ -33,17 +33,20 @@ func ReadRecord(id string) (string, error) {
 		return "", err
 	}
 
-	stmt, err := db.Prepare("select url from calendars where id = ?")
+	stmt, err := db.Prepare("select calendarBody from calendars where id = ?")
 	if err != nil {
 		return "", err
 	}
 	defer stmt.Close()
-	var url string
-	err = stmt.QueryRow(id).Scan(&url)
-	if err != nil {
+
+	var calendarBody string
+	err = stmt.QueryRow(id).Scan(&calendarBody)
+	if err == sql.ErrNoRows {
+		return "", nil
+	} else if err != nil {
 		return "", err
 	}
-	return url, nil
+	return calendarBody, nil
 
 }
 

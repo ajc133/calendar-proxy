@@ -24,44 +24,59 @@ func CreateCalendar(c *gin.Context) {
 	json := CalendarParams{}
 	err := c.Bind(&json)
 	if err != nil {
-		// TODO: consider simplifying this error
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		log.Printf("Error: %s", err)
+
+		// TODO: User-friendly error for form submission
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Parameters submitted were malformed"})
 		return
 	}
 
 	cal, err := FetchICS(json.Url)
 	if err != nil {
-		// TODO: consider masking this error
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		log.Printf("Error: %s", err)
+
+		// TODO: User-friendly error for form submission
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Error when fetching the given URL"})
 		return
 	}
 
 	log.Printf("Going to replace '%s' SUMMARY with '%s',", json.Url, json.ReplacementSummary)
 	newCal, err := TransformCalendar(cal, json.ReplacementSummary)
 	if err != nil {
-		// TODO: consider masking this error
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		log.Printf("Error: %s", err)
+
+		// TODO: User-friendly error for form submission
+		// TODO: use different status code
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Failed to parse fetched calendar body"})
 		return
 	}
 
+	// TODO: schedule a cronjob to periodically refresh this entry
 	id, err := WriteRecord(json, newCal)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		log.Printf("Error: %s", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Error storing calendar in database"})
 		return
 	}
 
-	c.Header(ContentType, CalendarContent)
-	// TODO: http status for 'created'
-	c.JSON(http.StatusOK, gin.H{"id": id})
+	c.JSON(http.StatusCreated, gin.H{"id": id})
 
 }
 
 func GetCalendarByID(c *gin.Context) {
 	id := c.Param("id")
-	url, err := ReadRecord(id)
+	calendarBody, err := ReadRecord(id)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error: %s", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Error in database lookup"})
+		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"id": id, "url": url})
+	if calendarBody == "" {
+		c.JSON(http.StatusNotFound, gin.H{"msg": "Couldn't find calendar with that id"})
+		return
+	}
+
+	c.Header(ContentType, CalendarContent)
+	c.String(http.StatusOK, calendarBody)
 }
