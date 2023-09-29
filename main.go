@@ -2,10 +2,15 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"strings"
 
+	"github.com/arran4/golang-ical"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -15,34 +20,117 @@ type CalendarParams struct {
 }
 
 func main() {
-	CreateDB()
+	initDB()
 	router := gin.Default()
 	router.StaticFile("/", "./static/index.html")
-	router.GET("/:id", GetCalendarByID)
-	router.POST("/", CreateCalendar)
+	router.GET("/:id", getCalendarByID)
+	router.POST("/", createCalendar)
 	router.Run("localhost:8080")
 }
 
-func CreateCalendar(c *gin.Context) {
+func createCalendar(c *gin.Context) {
 	json := CalendarParams{}
 	err := c.Bind(&json)
 	if err != nil {
+		// TODO: consider simplifying this error
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	WriteRecord(json)
-	c.JSON(http.StatusOK, gin.H{"status": "successfully added entry"})
+	ics, err := fetchICS(json.Url)
+	if err != nil {
+		// TODO: consider masking this error
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	newIcs, err := transformCalendar(ics, json.ReplacementSummary)
+	if err != nil {
+		// TODO: consider masking this error
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	writeRecord(json)
+	// c.JSON(http.StatusOK, gin.H{"status": "successfully added entry"})
+	c.Header("Content-Type", "text-calendar; charset=utf-8")
+	c.String(http.StatusOK, newIcs)
+
 }
 
-func GetCalendarByID(c *gin.Context) {
+func transformCalendar(body string, replacementSummary string) (string, error) {
+	cal, err := ics.ParseCalendar(strings.NewReader(body))
+	newCal := ics.NewCalendar()
+	log.Println("Attempting to transform")
+
+	if err != nil {
+		return "", err
+	}
+	log.Println(cal.Serialize())
+
+	for _, event := range cal.Events() {
+		newEvent := copyBarebonesEvent(event)
+		newEvent.SetSummary(replacementSummary)
+
+		newCal.AddVEvent(&newEvent)
+
+	}
+
+	return newCal.Serialize(), nil
+}
+
+func copyBarebonesEvent(event *ics.VEvent) ics.VEvent {
+	id := uuid.New().String()
+	newEvent := ics.NewEvent(id)
+
+	componentPropertiesToCopy := []ics.ComponentProperty{
+		ics.ComponentPropertyDtStart,
+		ics.ComponentPropertyDtEnd,
+		ics.ComponentPropertyRrule,
+		ics.ComponentPropertyRdate,
+	}
+
+	for _, prop := range componentPropertiesToCopy {
+		toCopy := event.GetProperty(prop)
+		if toCopy != nil {
+			newEvent.Properties = append(newEvent.Properties, *toCopy)
+		}
+	}
+	return *newEvent
+}
+
+func fetchICS(url string) (string, error) {
+	resp, err := http.Get(url)
+
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	isCalendar := strings.Contains(resp.Header.Get("Content-Type"), "text/calendar")
+	if !isCalendar {
+		log.Print("Invalid content-type: Got ", resp.Header.Get("Content-Type"))
+		return "", fmt.Errorf("URL is not a calendar")
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
+
+}
+
+func getCalendarByID(c *gin.Context) {
 	id := c.Param("id")
-	url, err := ReadRecord(id)
+	url, err := readRecord(id)
 	if err != nil {
 		log.Fatal(err)
 	}
 	c.JSON(http.StatusOK, gin.H{"id": id, "url": url})
 }
-func CreateDB() error {
+
+func initDB() error {
 	db, err := sql.Open("sqlite3", "./calendars.db")
 	stmt := "CREATE TABLE IF NOT EXISTS calendars(id INTEGER PRIMARY KEY, url TEXT, replacementSummary TEXT);"
 	_, err = db.Exec(stmt)
@@ -52,7 +140,7 @@ func CreateDB() error {
 	return nil
 }
 
-func ReadRecord(id string) (string, error) {
+func readRecord(id string) (string, error) {
 	db, err := sql.Open("sqlite3", "./calendars.db")
 	if err != nil {
 		return "", err
@@ -77,7 +165,7 @@ func ReadRecord(id string) (string, error) {
 
 }
 
-func WriteRecord(params CalendarParams) {
+func writeRecord(params CalendarParams) {
 	db, err := sql.Open("sqlite3", "./calendars.db")
 	if err != nil {
 		log.Fatal(err)
