@@ -25,3 +25,4 @@ input.txt
 calendars.db
 main
 calendarProxy
+.envrc
