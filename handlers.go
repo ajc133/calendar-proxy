@@ -7,6 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	ContentType string = "Content-Type"
+)
+
+const (
+	CalendarContent string = "text/calendar; charset=utf-8"
+)
+
 type CalendarParams struct {
 	Url                string `form:"url" json:"url" binding:"required"`
 	ReplacementSummary string `form:"replacementSummary" json:"replacementSummary" binding:"required"`
@@ -21,23 +29,30 @@ func CreateCalendar(c *gin.Context) {
 		return
 	}
 
-	ics, err := FetchICS(json.Url)
-	if err != nil {
-		// TODO: consider masking this error
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	newIcs, err := TransformCalendar(ics, json.ReplacementSummary)
+	cal, err := FetchICS(json.Url)
 	if err != nil {
 		// TODO: consider masking this error
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	WriteRecord(json)
-	// c.JSON(http.StatusOK, gin.H{"status": "successfully added entry"})
-	c.Header("Content-Type", "text/calendar; charset=utf-8")
-	c.String(http.StatusOK, newIcs)
+	log.Printf("Going to replace '%s' SUMMARY with '%s',", json.Url, json.ReplacementSummary)
+	cal, err = TransformCalendar(cal, json.ReplacementSummary)
+	if err != nil {
+		// TODO: consider masking this error
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	id, err := WriteRecord(json)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Header(ContentType, CalendarContent)
+	// TODO: http status for 'created'
+	c.JSON(http.StatusOK, gin.H{"id": id})
 
 }
 
@@ -47,5 +62,6 @@ func GetCalendarByID(c *gin.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	c.JSON(http.StatusOK, gin.H{"id": id, "url": url})
 }
