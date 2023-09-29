@@ -10,9 +10,10 @@ import (
 func InitDB() error {
 	db, err := sql.Open("sqlite3", "./calendars.db")
 	stmt := "CREATE TABLE IF NOT EXISTS calendars(" +
-		"id TEXT PRIMARY KEY," +
-		"url TEXT," +
-		"replacementSummary TEXT" +
+		"id TEXT PRIMARY KEY, " +
+		"url TEXT, " +
+		"replacementSummary TEXT, " +
+		"calendarBody TEXT" +
 		");"
 	_, err = db.Exec(stmt)
 	if err != nil {
@@ -46,7 +47,7 @@ func ReadRecord(id string) (string, error) {
 
 }
 
-func WriteRecord(params CalendarParams) (string, error) {
+func WriteRecord(params CalendarParams, calendarBody string) (string, error) {
 	id := uuid.New().String()
 	db, err := sql.Open("sqlite3", "./calendars.db")
 	if err != nil {
@@ -54,8 +55,8 @@ func WriteRecord(params CalendarParams) (string, error) {
 	}
 	defer db.Close()
 
-	stmt := "INSERT INTO calendars(id, url, replacementSummary) VALUES(?, ?, ?);"
-	_, err = db.Exec(stmt, id, params.Url, params.ReplacementSummary)
+	stmt := "INSERT INTO calendars(id, url, replacementSummary, calendarBody) VALUES(?, ?, ?, ?);"
+	_, err = db.Exec(stmt, id, params.Url, params.ReplacementSummary, calendarBody)
 	if err != nil {
 		return "", err
 	}
