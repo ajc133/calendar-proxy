@@ -24,3 +24,4 @@ go.work
 input.txt
 calendars.db
 main
+calendarProxy
