@@ -7,6 +7,12 @@ import (
 	"log"
 )
 
+type Record struct {
+	Url                string
+	ReplacementSummary string
+	CalendarBody       string
+}
+
 // TODO: write a class that stores dbFilename
 func InitDB(dbFilename string) error {
 	db, err := sql.Open("sqlite3", dbFilename)
@@ -51,7 +57,7 @@ func ReadRecord(dbFilename string, id string) (string, error) {
 
 }
 
-func WriteRecord(dbFilename string, url string, replacementSummary string, calendarBody string) (string, error) {
+func WriteRecord(dbFilename string, record Record) (string, error) {
 	id := uuid.New().String()
 	db, err := sql.Open("sqlite3", dbFilename)
 	if err != nil {
@@ -60,7 +66,7 @@ func WriteRecord(dbFilename string, url string, replacementSummary string, calen
 	defer db.Close()
 
 	stmt := "INSERT INTO calendars(id, url, replacementSummary, calendarBody) VALUES(?, ?, ?, ?);"
-	_, err = db.Exec(stmt, id, url, replacementSummary, calendarBody)
+	_, err = db.Exec(stmt, id, record.Url, record.ReplacementSummary, record.CalendarBody)
 	if err != nil {
 		return "", err
 	}

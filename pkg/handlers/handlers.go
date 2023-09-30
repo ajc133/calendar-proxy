@@ -32,8 +32,6 @@ func CreateCalendar(c *gin.Context) {
 	cal, err := calendar.FetchICS(json.Url)
 	if err != nil {
 		log.Printf("Error: %s", err)
-
-		// TODO: User-friendly error for form submission
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "Error when fetching the given URL"})
 		return
 	}
@@ -42,15 +40,18 @@ func CreateCalendar(c *gin.Context) {
 	newCal, err := calendar.TransformCalendar(cal, json.ReplacementSummary)
 	if err != nil {
 		log.Printf("Error: %s", err)
-
-		// TODO: User-friendly error for form submission
-		// TODO: use different status code
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "Failed to parse fetched calendar body"})
 		return
 	}
 
+	record := db.Record{
+		Url:                json.Url,
+		ReplacementSummary: json.ReplacementSummary,
+		CalendarBody:       newCal,
+	}
+
 	// TODO: schedule a cronjob to periodically refresh this entry
-	id, err := db.WriteRecord(DatabaseFileName, json.Url, json.ReplacementSummary, newCal)
+	id, err := db.WriteRecord(DatabaseFileName, record)
 	if err != nil {
 		log.Printf("Error: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Error storing calendar in database"})
