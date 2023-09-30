@@ -1,9 +1,11 @@
-package main
+package handlers
 
 import (
 	"log"
 	"net/http"
 
+	"github.com/ajc133/calendarproxy/pkg/calendar"
+	"github.com/ajc133/calendarproxy/pkg/db"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,7 +29,7 @@ func CreateCalendar(c *gin.Context) {
 		return
 	}
 
-	cal, err := FetchICS(json.Url)
+	cal, err := calendar.FetchICS(json.Url)
 	if err != nil {
 		log.Printf("Error: %s", err)
 
@@ -37,7 +39,7 @@ func CreateCalendar(c *gin.Context) {
 	}
 
 	log.Printf("Going to replace '%s' SUMMARY with '%s',", json.Url, json.ReplacementSummary)
-	newCal, err := TransformCalendar(cal, json.ReplacementSummary)
+	newCal, err := calendar.TransformCalendar(cal, json.ReplacementSummary)
 	if err != nil {
 		log.Printf("Error: %s", err)
 
@@ -48,7 +50,7 @@ func CreateCalendar(c *gin.Context) {
 	}
 
 	// TODO: schedule a cronjob to periodically refresh this entry
-	id, err := WriteRecord(DatabaseFileName, json.Url, json.ReplacementSummary, newCal)
+	id, err := db.WriteRecord(DatabaseFileName, json.Url, json.ReplacementSummary, newCal)
 	if err != nil {
 		log.Printf("Error: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Error storing calendar in database"})
@@ -61,7 +63,7 @@ func CreateCalendar(c *gin.Context) {
 
 func GetCalendarByID(c *gin.Context) {
 	id := c.Param("id")
-	calendarBody, err := ReadRecord(DatabaseFileName, id)
+	calendarBody, err := db.ReadRecord(DatabaseFileName, id)
 	if err != nil {
 		log.Printf("Error: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Error in database lookup"})

@@ -1,8 +1,8 @@
-package main
+package db
 
 import "testing"
 
-func testReadWrite(t *testing.T) {
+func TestReadWrite(t *testing.T) {
 
 	db := "test.db"
 	err := InitDB(db)
@@ -10,7 +10,7 @@ func testReadWrite(t *testing.T) {
 		t.Error(err)
 	}
 	expected := "hello there\nnice to meet you"
-	id, err := WriteRecord(db, "abc", "123", "expected")
+	id, err := WriteRecord(db, "abc", "123", expected)
 	if err != nil {
 		t.Error(err)
 	}

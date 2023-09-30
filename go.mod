@@ -1,4 +1,4 @@
-module github.com/ajc133/calendarProxy
+module github.com/ajc133/calendarproxy
 
 go 1.21.1
 

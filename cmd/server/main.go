@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ajc133/calendarproxy/pkg/db"
+	"github.com/ajc133/calendarproxy/pkg/handlers"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,12 +24,12 @@ func init() {
 }
 
 func main() {
-	InitDB("calendars.db")
+	db.InitDB("calendars.db")
 
 	router := gin.Default()
 	router.StaticFile("/", "./static/index.html")
-	router.GET("/:id", GetCalendarByID)
-	router.POST("/", CreateCalendar)
+	router.GET("/:id", handlers.GetCalendarByID)
+	router.POST("/", handlers.CreateCalendar)
 	socket := fmt.Sprintf("%s:%s", httpInterface, httpPort)
 	router.Run(socket)
 }
