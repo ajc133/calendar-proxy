@@ -22,7 +22,7 @@ func init() {
 }
 
 func main() {
-	InitDB()
+	InitDB("calendars.db")
 
 	router := gin.Default()
 	router.StaticFile("/", "./static/index.html")

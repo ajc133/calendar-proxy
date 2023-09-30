@@ -7,13 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const (
-	ContentType string = "Content-Type"
-)
-
-const (
-	CalendarContent string = "text/calendar; charset=utf-8"
-)
+const ContentType string = "Content-Type"
+const CalendarContent string = "text/calendar; charset=utf-8"
+const DatabaseFileName string = "calendars.db"
 
 type CalendarParams struct {
 	Url                string `form:"url" json:"url" binding:"required"`
@@ -52,7 +48,7 @@ func CreateCalendar(c *gin.Context) {
 	}
 
 	// TODO: schedule a cronjob to periodically refresh this entry
-	id, err := WriteRecord(json, newCal)
+	id, err := WriteRecord(DatabaseFileName, json.Url, json.ReplacementSummary, newCal)
 	if err != nil {
 		log.Printf("Error: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Error storing calendar in database"})
@@ -65,7 +61,7 @@ func CreateCalendar(c *gin.Context) {
 
 func GetCalendarByID(c *gin.Context) {
 	id := c.Param("id")
-	calendarBody, err := ReadRecord(id)
+	calendarBody, err := ReadRecord(DatabaseFileName, id)
 	if err != nil {
 		log.Printf("Error: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Error in database lookup"})

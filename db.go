@@ -7,8 +7,9 @@ import (
 	"log"
 )
 
-func InitDB() error {
-	db, err := sql.Open("sqlite3", "./calendars.db")
+// TODO: write a class that stores dbFilename
+func InitDB(dbFilename string) error {
+	db, err := sql.Open("sqlite3", dbFilename)
 	stmt := "CREATE TABLE IF NOT EXISTS calendars(" +
 		"id TEXT PRIMARY KEY, " +
 		"url TEXT, " +
@@ -22,8 +23,8 @@ func InitDB() error {
 	return nil
 }
 
-func ReadRecord(id string) (string, error) {
-	db, err := sql.Open("sqlite3", "./calendars.db")
+func ReadRecord(dbFilename string, id string) (string, error) {
+	db, err := sql.Open("sqlite3", dbFilename)
 	if err != nil {
 		return "", err
 	}
@@ -50,16 +51,16 @@ func ReadRecord(id string) (string, error) {
 
 }
 
-func WriteRecord(params CalendarParams, calendarBody string) (string, error) {
+func WriteRecord(dbFilename string, url string, replacementSummary string, calendarBody string) (string, error) {
 	id := uuid.New().String()
-	db, err := sql.Open("sqlite3", "./calendars.db")
+	db, err := sql.Open("sqlite3", dbFilename)
 	if err != nil {
 		return "", err
 	}
 	defer db.Close()
 
 	stmt := "INSERT INTO calendars(id, url, replacementSummary, calendarBody) VALUES(?, ?, ?, ?);"
-	_, err = db.Exec(stmt, id, params.Url, params.ReplacementSummary, calendarBody)
+	_, err = db.Exec(stmt, id, url, replacementSummary, calendarBody)
 	if err != nil {
 		return "", err
 	}
