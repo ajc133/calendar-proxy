@@ -43,7 +43,7 @@ func TransformCalendar(body string, replacementSummary string) (string, error) {
 	}
 
 	for _, event := range cal.Events() {
-		newEvent := CopyBarebonesEvent(event)
+		newEvent := copyBarebonesEvent(event)
 		newEvent.SetSummary(replacementSummary)
 
 		newCal.AddVEvent(&newEvent)
@@ -53,7 +53,7 @@ func TransformCalendar(body string, replacementSummary string) (string, error) {
 	return newCal.Serialize(), nil
 }
 
-func CopyBarebonesEvent(event *ics.VEvent) ics.VEvent {
+func copyBarebonesEvent(event *ics.VEvent) ics.VEvent {
 	id := uuid.New().String()
 	newEvent := ics.NewEvent(id)
 

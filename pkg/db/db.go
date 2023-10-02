@@ -7,6 +7,12 @@ import (
 	"log"
 )
 
+var calendarCache = make(map[string]string)
+
+func ClearCache() {
+	calendarCache = make(map[string]string)
+}
+
 type Record struct {
 	Url                string
 	ReplacementSummary string
@@ -30,6 +36,12 @@ func InitDB(dbFilename string) error {
 }
 
 func ReadRecord(dbFilename string, id string) (string, error) {
+	calendarBody, exists := calendarCache[id]
+	if exists {
+		log.Printf("Cache hit for %s\n", id)
+		return calendarBody, nil
+	}
+
 	db, err := sql.Open("sqlite3", dbFilename)
 	if err != nil {
 		return "", err
@@ -46,13 +58,13 @@ func ReadRecord(dbFilename string, id string) (string, error) {
 	}
 	defer stmt.Close()
 
-	var calendarBody string
 	err = stmt.QueryRow(id).Scan(&calendarBody)
 	if err == sql.ErrNoRows {
 		return "", nil
 	} else if err != nil {
 		return "", err
 	}
+	calendarCache[id] = calendarBody
 	return calendarBody, nil
 
 }

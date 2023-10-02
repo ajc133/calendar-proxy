@@ -6,15 +6,18 @@ Proxy that changes calendar events in a pre-defined way
 
 ## DB
 
+- Update a row
+- Refresh calendarBody daily for all records
 - Write tests
 
 ## Server
 
 - Set trusted proxies https://pkg.go.dev/github.com/gin-gonic/gin#Engine.SetHTMLTemplate
-- Better error messages when input is malformed
+- Return html pages when input is malformed
+- PATCH a calendar's replacementSummary
+    - Clear cache (maybe only for this key?) upon doing so
 - Write tests
-- Store calendars in a cache that gets refreshed periodically and stored to db if changed
 
-## App
+## Calendar
 
 - Write tests
