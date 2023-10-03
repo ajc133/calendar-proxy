@@ -40,6 +40,8 @@ func ReadRecord(dbFilename string, id string) (string, error) {
 	if exists {
 		log.Printf("Cache hit for %s\n", id)
 		return calendarBody, nil
+	} else {
+		log.Printf("Cache miss for %s\n", id)
 	}
 
 	db, err := sql.Open("sqlite3", dbFilename)

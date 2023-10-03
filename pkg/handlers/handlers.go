@@ -29,21 +29,10 @@ func CreateCalendar(c *gin.Context) {
 		return
 	}
 
-	cal, err := calendar.FetchICS(json.Url)
+	newCal, err := calendar.FetchAndTransformCalendar(json.Url, json.ReplacementSummary)
 	if err != nil {
-		log.Printf("Error: %s", err)
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "Error when fetching the given URL"})
-		return
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Error when fetching and parsing the given URL"})
 	}
-
-	log.Printf("Going to replace '%s' SUMMARY with '%s',", json.Url, json.ReplacementSummary)
-	newCal, err := calendar.TransformCalendar(cal, json.ReplacementSummary)
-	if err != nil {
-		log.Printf("Error: %s", err)
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "Failed to parse fetched calendar body"})
-		return
-	}
-
 	record := db.Record{
 		Url:                json.Url,
 		ReplacementSummary: json.ReplacementSummary,

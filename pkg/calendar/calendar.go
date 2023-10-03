@@ -11,7 +11,24 @@ import (
 	"github.com/google/uuid"
 )
 
-func FetchICS(url string) (string, error) {
+const DatabaseFileName string = "calendars.db"
+
+func FetchAndTransformCalendar(url string, replacementSummary string) (string, error) {
+	cal, err := fetchCalendar(url)
+	if err != nil {
+		log.Printf("Error fetching url (%s): %s", url, err)
+		return "", err
+	}
+
+	newCal, err := transformCalendar(cal, replacementSummary)
+	if err != nil {
+		log.Printf("Error transforming calendar from url (%s): %s", url, err)
+		return "", err
+	}
+	return newCal, nil
+}
+
+func fetchCalendar(url string) (string, error) {
 	resp, err := http.Get(url)
 
 	if err != nil {
@@ -34,10 +51,9 @@ func FetchICS(url string) (string, error) {
 
 }
 
-func TransformCalendar(body string, replacementSummary string) (string, error) {
-	cal, err := ics.ParseCalendar(strings.NewReader(body))
+func transformCalendar(body string, replacementSummary string) (string, error) {
 	newCal := ics.NewCalendar()
-
+	cal, err := ics.ParseCalendar(strings.NewReader(body))
 	if err != nil {
 		return "", err
 	}
