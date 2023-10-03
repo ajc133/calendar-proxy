@@ -23,5 +23,5 @@ go.work
 # User-defined
 input.txt
 *.db
-server
-.envrc
+/server
+/.envrc
