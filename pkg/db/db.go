@@ -7,16 +7,9 @@ import (
 	"log"
 )
 
-var calendarCache = make(map[string]string)
-
-func ClearCache() {
-	calendarCache = make(map[string]string)
-}
-
 type Record struct {
 	Url                string
 	ReplacementSummary string
-	CalendarBody       string
 }
 
 // TODO: write a class that stores dbFilename
@@ -25,9 +18,7 @@ func InitDB(dbFilename string) error {
 	stmt := "CREATE TABLE IF NOT EXISTS calendars(" +
 		"id TEXT PRIMARY KEY, " +
 		"url TEXT, " +
-		"replacementSummary TEXT, " +
-		"calendarBody TEXT" +
-		");"
+		"replacementSummary TEXT);"
 	_, err = db.Exec(stmt)
 	if err != nil {
 		log.Fatal(err)
@@ -35,39 +26,32 @@ func InitDB(dbFilename string) error {
 	return nil
 }
 
-func ReadRecord(dbFilename string, id string) (string, error) {
-	calendarBody, exists := calendarCache[id]
-	if exists {
-		log.Printf("Cache hit for %s\n", id)
-		return calendarBody, nil
-	} else {
-		log.Printf("Cache miss for %s\n", id)
-	}
-
+func ReadRecord(dbFilename string, id string) (Record, error) {
 	db, err := sql.Open("sqlite3", dbFilename)
 	if err != nil {
-		return "", err
+		return Record{}, err
 	}
 	defer db.Close()
 
 	if err != nil {
-		return "", err
+		return Record{}, err
 	}
 
-	stmt, err := db.Prepare("select calendarBody from calendars where id = ?")
+	stmt, err := db.Prepare("select url, replacementSummary from calendars where id = ?")
 	if err != nil {
-		return "", err
+		return Record{}, err
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(id).Scan(&calendarBody)
+	var url, replacementSummary string
+	err = stmt.QueryRow(id).Scan(&url, &replacementSummary)
 	if err == sql.ErrNoRows {
-		return "", nil
+		return Record{}, err
 	} else if err != nil {
-		return "", err
+		return Record{}, err
 	}
-	calendarCache[id] = calendarBody
-	return calendarBody, nil
+
+	return Record{url, replacementSummary}, nil
 
 }
 
@@ -79,8 +63,8 @@ func WriteRecord(dbFilename string, record Record) (string, error) {
 	}
 	defer db.Close()
 
-	stmt := "INSERT INTO calendars(id, url, replacementSummary, calendarBody) VALUES(?, ?, ?, ?);"
-	_, err = db.Exec(stmt, id, record.Url, record.ReplacementSummary, record.CalendarBody)
+	stmt := "INSERT INTO calendars(id, url, replacementSummary) VALUES(?, ?, ?);"
+	_, err = db.Exec(stmt, id, record.Url, record.ReplacementSummary)
 	if err != nil {
 		return "", err
 	}

@@ -29,21 +29,15 @@ func CreateCalendar(c *gin.Context) {
 		return
 	}
 
-	newCal, err := calendar.FetchAndTransformCalendar(json.Url, json.ReplacementSummary)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "Error when fetching and parsing the given URL"})
-	}
 	record := db.Record{
 		Url:                json.Url,
 		ReplacementSummary: json.ReplacementSummary,
-		CalendarBody:       newCal,
 	}
 
-	// TODO: schedule a cronjob to periodically refresh this entry
 	id, err := db.WriteRecord(DatabaseFileName, record)
 	if err != nil {
 		log.Printf("Error: %s", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Error storing calendar in database"})
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Error writing to db"})
 		return
 	}
 
@@ -53,18 +47,17 @@ func CreateCalendar(c *gin.Context) {
 
 func GetCalendarByID(c *gin.Context) {
 	id := c.Param("id")
-	calendarBody, err := db.ReadRecord(DatabaseFileName, id)
+	record, err := db.ReadRecord(DatabaseFileName, id)
 	if err != nil {
 		log.Printf("Error: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Error in database lookup"})
 		return
 	}
 
-	if calendarBody == "" {
-		c.JSON(http.StatusNotFound, gin.H{"msg": "Couldn't find calendar with that id"})
-		return
+	newCal, err := calendar.FetchAndTransformCalendar(record.Url, record.ReplacementSummary)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Error when fetching and parsing the given URL"})
 	}
-
 	c.Header(ContentType, CalendarContent)
-	c.String(http.StatusOK, calendarBody)
+	c.String(http.StatusOK, newCal)
 }

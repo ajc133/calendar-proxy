@@ -9,11 +9,15 @@ func TestReadWrite(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	expected := "hello there\nnice to meet you"
+
+	expected := Record{
+		Url:                "abc",
+		ReplacementSummary: "123",
+	}
+
 	record := Record{
 		Url:                "abc",
 		ReplacementSummary: "123",
-		CalendarBody:       expected,
 	}
 	id, err := WriteRecord(db, record)
 	if err != nil {

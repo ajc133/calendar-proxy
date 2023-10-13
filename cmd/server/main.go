@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/ajc133/calendarproxy/pkg/db"
 	"github.com/ajc133/calendarproxy/pkg/handlers"
@@ -26,25 +25,6 @@ func init() {
 
 func main() {
 	db.InitDB("calendars.db")
-
-	// Clear cache on a cadence
-	go func() {
-		ticker := time.NewTicker(time.Hour * 24)
-		for {
-			<-ticker.C
-			// TODO: test this
-			db.ClearCache()
-		}
-	}()
-
-	// Clear cache on a cadence
-	go func() {
-		ticker := time.NewTicker(time.Hour * 24)
-		for {
-			<-ticker.C
-			db.ClearCache()
-		}
-	}()
 
 	router := gin.Default()
 	router.StaticFile("/", "./static/index.html")
