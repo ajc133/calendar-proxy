@@ -2,6 +2,7 @@ FROM docker.io/golang:1.21
 
 # Set destination for COPY
 WORKDIR /app
+RUN mkdir /data
 
 # Download Go modules
 COPY go.mod go.sum ./
