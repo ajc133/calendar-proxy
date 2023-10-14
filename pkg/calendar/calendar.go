@@ -28,6 +28,11 @@ func FetchAndTransformCalendar(url string, replacementSummary string) (string, e
 	return newCal, nil
 }
 
+func isCalendarContentType(header string) bool {
+	return strings.Contains(header, "text/calendar") ||
+		strings.Contains(header, "application/octet-stream")
+}
+
 func fetchCalendar(url string) (string, error) {
 	resp, err := http.Get(url)
 
@@ -36,8 +41,7 @@ func fetchCalendar(url string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	isCalendar := strings.Contains(resp.Header.Get("Content-Type"), "text/calendar")
-	if !isCalendar {
+	if !isCalendarContentType(resp.Header.Get("Content-Type")) {
 		log.Print("Invalid content-type: Got ", resp.Header.Get("Content-Type"))
 		return "", fmt.Errorf("URL is not a calendar")
 	}
