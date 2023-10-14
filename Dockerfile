@@ -10,7 +10,9 @@ RUN go mod download
 COPY cmd/server/main.go ./
 COPY pkg/ ./pkg/
 
-RUN GOOS=linux go build -o /server
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \ 
+    GOOS=linux go build -o /server
 
 FROM docker.io/debian:bookworm-slim
 RUN apt-get update && apt-get -y install ca-certificates
