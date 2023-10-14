@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const DatabaseFileName string = "calendars.db"
+const DatabaseFileName string = "data/calendars.db"
 
 func FetchAndTransformCalendar(url string, replacementSummary string) (string, error) {
 	cal, err := fetchCalendar(url)

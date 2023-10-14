@@ -59,6 +59,7 @@ func WriteRecord(dbFilename string, record Record) (string, error) {
 	id := uuid.New().String()
 	db, err := sql.Open("sqlite3", dbFilename)
 	if err != nil {
+		log.Printf("Unable to open sqlite db")
 		return "", err
 	}
 	defer db.Close()
@@ -66,6 +67,7 @@ func WriteRecord(dbFilename string, record Record) (string, error) {
 	stmt := "INSERT INTO calendars(id, url, replacementSummary) VALUES(?, ?, ?);"
 	_, err = db.Exec(stmt, id, record.Url, record.ReplacementSummary)
 	if err != nil {
+		log.Printf("Unable to insert record into calendars table")
 		return "", err
 	}
 

@@ -7,6 +7,7 @@ Proxy that changes calendar events in a pre-defined way
 ## DB
 
 - Update a row
+- Only open db once, store handle somewhere
 - Write tests
 
 ## Server

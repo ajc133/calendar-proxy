@@ -11,7 +11,7 @@ import (
 
 const ContentType string = "Content-Type"
 const CalendarContent string = "text/calendar; charset=utf-8"
-const DatabaseFileName string = "calendars.db"
+const DatabaseFileName string = "data/calendars.db"
 
 type CalendarParams struct {
 	Url                string `form:"url" json:"url" binding:"required"`

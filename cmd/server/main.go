@@ -28,8 +28,8 @@ func main() {
 
 	router := gin.Default()
 	router.StaticFile("/", "./static/index.html")
-	router.GET("/:id", handlers.GetCalendarByID)
-	router.POST("/", handlers.CreateCalendar)
+	router.GET("/calendars/:id", handlers.GetCalendarByID)
+	router.POST("/calendars", handlers.CreateCalendar)
 	socket := fmt.Sprintf("%s:%s", httpInterface, httpPort)
 	router.Run(socket)
 }
