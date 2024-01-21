@@ -64,7 +64,7 @@ func ReadRecord(dbFilename string, id string) (Record, error) {
 }
 
 func UpdateRecord(dbFilename string, record ChangeRecord) (string, error) {
-	fmt.Printf("Updating: %#v", record)
+	fmt.Printf("Updating: %#v\n", record)
 	db, err := sql.Open("sqlite3", dbFilename)
 	if err != nil {
 		log.Printf("Unable to open sqlite db")
