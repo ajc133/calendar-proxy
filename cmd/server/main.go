@@ -30,6 +30,7 @@ func main() {
 	router.StaticFile("/", "./static/index.html")
 	router.GET("/calendars/:id", handlers.GetCalendarByID)
 	router.POST("/calendars", handlers.CreateCalendar)
+	router.PATCH("/calendars", handlers.UpdateCalendar)
 	socket := fmt.Sprintf("%s:%s", httpInterface, httpPort)
 	router.Run(socket)
 }
