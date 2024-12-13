@@ -1,4 +1,4 @@
-package calendar
+package main
 
 import (
 	"fmt"
@@ -14,6 +14,7 @@ import (
 const DatabaseFileName string = "data/calendars.db"
 
 func FetchAndTransformCalendar(url string, replacementSummary string) (string, error) {
+	fmt.Printf("URL: %s\n", url)
 	cal, err := fetchCalendar(url)
 	if err != nil {
 		log.Printf("Error fetching url (%s): %s", url, err)

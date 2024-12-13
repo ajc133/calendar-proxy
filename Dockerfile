@@ -1,4 +1,4 @@
-FROM docker.io/golang:1.21 as build
+FROM docker.io/golang:1.23 as build
 
 # Set destination for COPY
 WORKDIR /app
@@ -7,8 +7,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY cmd/server/main.go ./
-COPY pkg/ ./pkg/
+COPY *.go ./
 
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \ 

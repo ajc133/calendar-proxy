@@ -1,25 +1,127 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 	<meta charset="UTF-8">
-	<title>Calendar Proxy</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>URL Encoder</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			margin: 0;
+			padding: 0;
+			background-color: #ffe4e6;
+			color: #333;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			min-height: 100vh;
+		}
+
+		h1 {
+			color: #ff007f;
+			margin-bottom: 20px;
+		}
+
+		form {
+			background: #fff;
+			padding: 20px;
+			border-radius: 10px;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			width: 90%;
+			max-width: 400px;
+		}
+
+		label {
+			font-weight: bold;
+			margin-bottom: 5px;
+		}
+
+		input,
+		button,
+		textarea {
+			width: 100%;
+			padding: 10px;
+			border: 1px solid #ddd;
+			border-radius: 5px;
+			margin-bottom: 15px;
+			font-size: 16px;
+		}
+
+		button {
+			background-color: #ff007f;
+			color: white;
+			border: none;
+			cursor: pointer;
+			font-weight: bold;
+		}
+
+		button:hover {
+			background-color: #e60073;
+		}
+
+		textarea {
+			resize: none;
+		}
+
+		h2 {
+			margin-top: 20px;
+			color: #ff007f;
+		}
+
+		p {
+			background: #fff;
+			padding: 10px;
+			border-radius: 5px;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			word-break: break-all;
+			max-width: 90%;
+			margin: 0 auto;
+		}
+
+		@media (max-width: 600px) {
+			body {
+				padding: 10px;
+			}
+
+			form {
+				width: 100%;
+			}
+		}
+	</style>
 </head>
 
 <body>
-
-	<h1>Calendar Proxy</h1>
-
-	<form action="/calendars" method="post">
-		<label for="url">URL:</label>
-		<input type="text" id="url" name="url"><br><br>
-
-		<label for="replacementSummary">Replacement Summary:</label>
-		<input type="text" id="replacementSummary" name="replacementSummary"><br><br>
-
-		<input type="submit" value="Submit">
+	<h1>URL Encoder</h1>
+	<form id="urlForm">
+		<label for="urlInput">Enter URL:</label>
+		<input type="text" id="urlInput" name="urlInput" required>
+		<label for="replacementSummary">Enter replacement summary:</label>
+		<input type="text" id="replacementSummary" name="replacementSummary" required>
+		<button type="button" onclick="encodeURL()">Encode</button>
 	</form>
 
+	<h2>Urls:</h2>
+	<p>Normal devices: <a id="normalUrl" target="_blank"></a></p>
+	<p>Apple devices: <a id="appleUrl" target="_blank"></a></p>
+
+
+	<script>
+		function encodeURL() {
+			const input = document.getElementById('urlInput').value;
+			const encoded = encodeURIComponent(input);
+			const replacementSummary = document.getElementById('replacementSummary').value;
+
+			const normalURl = `${window.location.origin}/cal?url=${encoded}&replacementSummary=${replacementSummary}`;
+			document.getElementById('normalUrl').setAttribute("href", normalURl);
+			document.getElementById('normalUrl').textContent = "Calendar link";
+
+			const appleUrl = `webcal://${window.location.host}/cal?url=${encoded}&replacementSummary=${replacementSummary}`;
+			document.getElementById('appleUrl').setAttribute("href", appleUrl);
+			document.getElementById('appleUrl').textContent = "Calendar link";
+		}
+	</script>
 </body>
 
-</html>
+</html
